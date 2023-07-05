@@ -1,7 +1,6 @@
 import os
 import math
 import numpy as np
-import os
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -44,8 +43,22 @@ DIM = '\033[2m'
 
 def segregate_alignment(df, args, output_dir, filename):
 
-    # homocygotic positions
+    """
+    Segregates two strings from a mixed string of Mycobacterium tuberculosis 
+    based on the different proportions of the SNPs previously called.
 
+    Args:
+        df pandas.DataFrame): Input dataframe containing SNP data.
+        args: Additional arguments.
+        output_dir (str): Output directory path.
+        filename (str): Output file name.
+
+    Returns:
+        pandas.DataFrame: Segregated dataframe.
+
+    """
+
+    # homocygotic positions
     df_hom = df[df['ALT_FREQ'] >= args.min_HOM]
     df_hom.iloc[:,[2]]
 
@@ -57,7 +70,6 @@ def segregate_alignment(df, args, output_dir, filename):
     df_hom = df_hom[['POS', 'Reference', 'sample_1', 'sample_1+2', 'sample_2']]
 
     # ambiguous positions
-
     df_htz = df[(df['ALT_FREQ'] <= args.ambiguity) & (df['ALT_FREQ'] > (1-args.ambiguity))].round(3)
 
     iupac =     {"AG": "R", "GA":"R",
@@ -88,7 +100,6 @@ def segregate_alignment(df, args, output_dir, filename):
     df_htz = df_htz[['POS', 'Reference', 'sample_1', 'sample_1+2', 'sample_2']]
 
     # HTZ positions
-
     df_segregate = df[ ((df.ALT_FREQ < args.min_HOM) & 
                         (df.ALT_FREQ > args.ambiguity)) |
                         ((df.ALT_FREQ <= (1 - args.ambiguity)) &
@@ -115,12 +126,10 @@ def segregate_alignment(df, args, output_dir, filename):
     df_segregate['sample_2'] = sample_2
     df_segregate['sample_1+2'] = sample_1_2
     df_segregate = df_segregate.rename(columns={'REF': 'Reference'})
-
     df_segregate = df_segregate[["POS","Reference","sample_1","sample_1+2", 'sample_2', 'TOTAL_DP']]
 
 
     # create df_aln
-
     df_aln = pd.concat([df_hom, df_htz, df_segregate])
     df_aln = df_aln.sort_values(by='POS')
 
@@ -136,113 +145,6 @@ def segregate_alignment(df, args, output_dir, filename):
 
     return df_aln
 
-
-
-# def segregate_alignment(df, args, output_dir, filename):
-    
-#     # if ALT_FREQ >= min_HOM
-
-#     hom = df[df['ALT_FREQ'] >= args.min_HOM]
-
-#     hom = hom[['POS', 'REF','ALT','TOTAL_DP']]
-
-#     hom['sample_1'] = hom[['ALT']]
-#     hom['sample_1+2'] = hom[['ALT']]
-#     hom = hom.rename(columns={'ALT':'sample_2', 'REF':'Reference'})
-
-#     hom = hom[["POS","Reference","sample_1","sample_1+2", 'sample_2', 'TOTAL_DP']]
-
-#     # if ALT_FREQ between ambiguity and 1-ambiguity 
-
-#     htz = df[df['ALT_FREQ'] <= args.ambiguity].round(3)
-#     htz = htz[htz['ALT_FREQ'] > 1 - args.ambiguity].round(3)
-
-
-#     iupac =     {"AG": "R", "GA":"R",
-#                 "CT":"Y", "TC":"Y",
-#                 "GC":"S", "CG":"S",
-#                 "AT":"W", "TA":"W",
-#                 "GT":"K", "TG":"K",
-#                 "AC":"M", "CA":"M"}
-
-#     sample_1 = []
-#     sample_2 = []
-#     sample_1_2 = []
-
-#     for index, x in htz.iterrows():
-#         nt = iupac[x['ALT']+x['REF']]
-#         sample_2.append(nt +' ('+ str(max(x[['REF_FREQ', 'ALT_FREQ']]))+')')
-#         sample_1.append(nt +' ('+ str(min(x[['REF_FREQ', 'ALT_FREQ']]))+')')
-#         sample_1_2.append(x['REF']+'/'+x['ALT'])
-
-#     htz = htz[['POS','REF','TOTAL_DP']]
-
-#     htz['sample_1'] = sample_1
-#     htz['sample_1+2'] = sample_1_2
-#     htz['sample_2'] = sample_2
-#     htz = htz.rename(columns={'REF':'Reference'})
-
-#     htz = htz[["POS","Reference","sample_1","sample_1+2", 'sample_2', 'TOTAL_DP']]
-
-#     # if ALT_FREQ between min_HOM and ambiguity
-
-#     segregate = df[(df['ALT_FREQ'] < args.min_HOM) & (df['ALT_FREQ'] > args.ambiguity)] # & (result['ALT_FREQ'] <= 0.45) & (result['ALT_FREQ'] >= 0.15)]
-#     segregate2 = df[(df['ALT_FREQ'] <= 1- args.ambiguity) & (df['ALT_FREQ'] > 1 - args.min_HOM)] # dani quita el igual en >= 1-min_hom ya que no considera los que tengan 0.15
-
-#     sample_1 = []
-#     sample_2 = []
-#     sample_1_2 = []
-
-#     for index, x in segregate.iterrows():
-#         sample_2.append(x['ALT'] + ' (' + str(x['ALT_FREQ']) + ')')
-#         sample_1.append(x['REF'] + ' (' + str(x['REF_FREQ']) + ')')
-#         sample_1_2.append(x['ALT'] + '/' + x['REF'])
-
-#     segregate = segregate[['POS','REF','TOTAL_DP']]
-
-#     segregate['sample_1'] = sample_1
-#     segregate['sample_1+2'] = sample_1_2
-#     segregate['sample_2'] = sample_2
-#     segregate = segregate.rename(columns={'REF':'Reference'})
-
-#     segregate = segregate[["POS","Reference","sample_1","sample_1+2", 'sample_2', 'TOTAL_DP']]
-
-#     sample_1 = []
-#     sample_2 = []
-#     sample_1_2 = []
-
-#     for index, x in segregate2.iterrows():
-#         sample_2.append(x['REF'] + ' (' + str(x['REF_FREQ']) + ')')
-#         sample_1.append(x['ALT'] + ' (' + str(x['ALT_FREQ']) + ')')
-#         sample_1_2.append(x['REF'] + '/' + x['ALT'])
-
-#     segregate2 = segregate2[['POS','REF','TOTAL_DP']]
-
-#     segregate2['sample_1'] = sample_1
-#     segregate2['sample_1+2'] = sample_1_2
-#     segregate2['sample_2'] = sample_2
-#     segregate2 = segregate2.rename(columns={'REF':'Reference'})
-
-#     segregate2 = segregate2[["POS","Reference","sample_1","sample_1+2", 'sample_2', 'TOTAL_DP']]
-
-#     segregate = pd.concat([segregate, segregate2])
-
-#     # create df_aln
-
-#     df_aln = pd.concat([hom, htz, segregate])
-#     df_aln = df_aln.sort_values(by='POS')
-
-#     # save df_aln and df_aln_HTZ
-#     df_aln_t = df_aln.T
-#     df_aln_HTZ_t = df_aln[df_aln['sample_1+2'].str.contains('/')].T
-
-#     out_dir = os.path.join(output_dir, filename)
-#     utils.check_create_dir(out_dir)
-
-#     df_aln_t.to_csv(out_dir+'/sample_aln.csv', header=False)
-#     df_aln_HTZ_t.to_csv(out_dir+'/sample_HTZ_aln.csv', header=False)
-
-#     return df_aln
 
 def store_sequences(df_aln, filename, output_dir):
 
@@ -695,113 +597,126 @@ def quality_control(df, args, filename, output_dir):
 #################################################################
 
 
+def df_HTZ_positions(df, name):
+    df = df[['POS']][(df.ALT_FREQ <= 0.85) & (df.ALT_FREQ >= (1 - 0.85))]
+    df[name] = ['HTZ']*len(df)
+    return df
 
-### COMPARISON DESDE CERO PORQUE YA NO PUEDO MÁS
-
-
-def add_sequence(args, df_all, path_vcf, output_dir):
+def add_sequences(args, df_all):
     
-    name_vcf = path_vcf.split('/')[-1]
-    name_vcf = name_vcf.split('.')[0]
-    # name_vcf = name_vcf.split('_')[0]
+    vcf_to_compare = os.listdir(args.compare)
+    
+    for vcf in vcf_to_compare:
 
-    df_new_seq = utils.parse_vcf(args, path_vcf, output_dir, 20,
-                                 name_vcf, compare=True)
+        vcf_path = os.path.join(args.compare, vcf)
 
-    df_new_seq = df_new_seq[['POS', 'REF', 'ALT', 'TOTAL_DP', 'REF_DP', 'REF_FREQ',
+        # read vcf original
+        df_original = pd.read_csv(vcf_path)
+        df_original = df_original[['POS', 'REF', 'ALT', 'TOTAL_DP', 'REF_DP', 'REF_FREQ',
        'ALT_DP', 'ALT_FREQ']]
-    df_new_seq = df_new_seq[df_new_seq['ALT_FREQ'] >= 0.15]
+        df_original = df_original[df_original['ALT_FREQ'] >= 0.15]
+
+        # name vcf
+        name_vcf = vcf_path.split('/')[-1]
+        name_vcf = name_vcf.split('.')[0]
+        name_vcf = name_vcf[:5]
     
-    d = {pos:nt for nt, pos in zip(df_new_seq.ALT, df_new_seq.POS)}
+        d = {pos:nt for nt, pos in zip(df_original.ALT, df_original.POS)}
+        
+        new_seq = [nt if pos not in d.keys() else d[pos] for nt, pos in zip(df_all.MTB_anc, df_all.POS)]
+
+        df_all[name_vcf] = new_seq
+
+def fill_results(args, results, df_all, sample, output_dir):
     
-    new_seq = [nt if pos not in d.keys() else d[pos] for nt, pos in zip(df_all.MTB_anc, df_all.POS)]
-
-    df_all[name_vcf] = new_seq
-
-    return df_new_seq, name_vcf
-
-def fill_results(results, df_all, df_original, name_original, sample):
-
-    # snps in original
-    # df_total_snps_original = df_all[['POS', name_original]][df_all.MTB_anc != df_all[name_original]]
-    df_total_snps_original = df_all[df_all.MTB_anc != df_all[name_original]]
-    snps_original = len(df_total_snps_original)
-
     # snps in sample
     df_total_snps_sample = df_all[df_all.MTB_anc != df_all[sample]]
     snps_sample = len(df_total_snps_sample)
 
-    # diferent snps original-sample
-    df_snps_differents = df_all[['POS', sample, name_original, 'MTB_anc']][df_all[sample] != df_all[name_original]]
-
-    df_snps_differents = pd.merge( df_snps_differents,
-                                    df_original[['POS', 'ALT_FREQ', 'TOTAL_DP']],
-                                    on='POS', how='left')
-    snps_differents = len(df_snps_differents)
-
-    # total positions match original-sample
-    df_positions_match = df_all[df_all[sample] == df_all[name_original]]
-    positions_match = len(df_positions_match)
-
-    # snps original that match with sample
-    # df_snps_original = df_all[df_all.POS.isin(df_total_snps_original.POS)]
-    # df_snps_original_match_sample = df_snps_original[df_snps_original[sample] == df_snps_original[name_original]]
-    # snps_match = len(df_snps_original_match_sample)
-
-    df_snps_original_match_sample = df_total_snps_original[df_total_snps_original[sample] == df_total_snps_original[name_original]]
-    snps_match = len(df_snps_original_match_sample)
-
     # ambiguous nt sample
     ambiguous_nt = len([x for x in df_all[sample] if x not in ['A', 'C', 'G', 'T']])
 
-    # total snps
-    total_snps = snps_match + snps_differents
-
-    name_original_sample = '%s_%s' %(name_original, sample)
-
-    values = [  name_original_sample,   # original-sample
-                snps_original,          # snps_original
-                snps_sample,            # snps_sample
-                snps_match+snps_differents, # total_snps
-                snps_match,             # snps_match_original
-                snps_differents,        # different_alleles
-                ambiguous_nt,           # ambiguous
-                round(snps_match*100/snps_original, 2), # snps_original_match_per
-                round(snps_match*100/(total_snps), 2)] # snps_match_percentage
     
-    # add row to results
-    results.loc[len(results)] = values
-
-    return df_snps_differents, df_snps_original_match_sample
-
-def htz_positions(df_original, name_original):
-  
-    # HTZ positions in original
-    df_HTZ_original = df_original[['POS']][(df_original.ALT_FREQ <= 0.85) & (df_original.ALT_FREQ >= (1 - 0.85))]
-    df_HTZ_original[name_original] = ['HTZ']*len(df_HTZ_original)
-
-    return(df_HTZ_original)
-
-def results_sample_original_htz(out_dir, results, name_original, sample, df_dif_htz, df_match_htz):
+    vcf_to_compare = os.listdir(args.compare)
     
-    results_sample = results[results['original-sample'] == name_original+'_'+sample]
+    for vcf in vcf_to_compare:
+
+        vcf_path = os.path.join(args.compare, vcf)
+
+        # name vcf
+        name_original = vcf.split('/')[-1]
+        name_original = name_original.split('.')[0]
+        name_original = name_original[:5]
+
+        # read vcf original
+        df_original = utils.parse_vcf(args, vcf_path, output_dir, 20,
+                                name_original, compare=True)
+
+
+        df_original = pd.read_csv(vcf_path)
+        df_original = df_original[['POS', 'REF', 'ALT', 'TOTAL_DP', 'REF_DP', 'REF_FREQ',
+       'ALT_DP', 'ALT_FREQ']]
+        df_original = df_original[df_original['ALT_FREQ'] >= 0.15]
     
-    htz_dif_sample = len(df_dif_htz[~df_dif_htz['HTZ'].isna()])
-    htz_match_sample_1 = len(df_match_htz[~df_match_htz['HTZ'].isna()])
-    
-    results_sample['HTZ'] = htz_dif_sample + htz_match_sample_1
+        # snps in original
+        # df_total_snps_original = df_all[['POS', name_original]][df_all.MTB_anc != df_all[name_original]]
+        df_total_snps_original = df_all[df_all.MTB_anc != df_all[name_original]]
+        snps_original = len(df_total_snps_original)
 
-    snps_match_no_htz = len(df_match_htz[df_match_htz['HTZ'].isna()])
-    snps_dif_no_htz =  len(df_dif_htz[df_dif_htz['HTZ'].isna()])
-    snps_no_htz_match_perc = (snps_match_no_htz*100/(snps_match_no_htz + snps_dif_no_htz))
+        # diferent snps original-sample
+        df_snps_differents = df_all[['POS', sample, name_original, 'MTB_anc']][df_all[sample] != df_all[name_original]]
+        snps_differents = len(df_snps_differents)
 
-    results_sample['snps_no_htz_match_percentage'] = snps_no_htz_match_perc
+        # total positions match original-sample
+        df_positions_match = df_all[df_all[sample] == df_all[name_original]]
+        positions_match = len(df_positions_match)
 
-    results_sample.to_csv(os.path.join(out_dir, 'results_%s_%s.csv' %(name_original, sample)))
+        df_snps_original_match_sample = df_total_snps_original[df_total_snps_original[sample] == df_total_snps_original[name_original]]
+        snps_match = len(df_snps_original_match_sample)
 
+        # total snps
+        total_snps = snps_match + snps_differents
+
+        # name original_sample
+        name_original_sample = '%s_%s' %(name_original, sample)
+
+        # htz snps original
+        df_original_HTZ = df_HTZ_positions(df_original, name_original)
+
+        # htz dif
+        df_differences = pd.merge(df_snps_differents[['POS']],
+                    df_original_HTZ,
+                    on='POS', how='left')
+        
+        htz_dif = df_differences[~df_differences[name_original].isna()]
+        diff_no_htz  = len(df_differences[df_differences[name_original].isna()])
+        
+        # htz match
+        df_match = pd.merge(df_snps_original_match_sample[['POS']],
+                    df_original_HTZ,
+                    on='POS', how='left')
+        htz_match = df_match[~df_match[name_original].isna()]
+        match_no_htz= len(df_match[df_match[name_original].isna()])
+
+        snps_no_htz_match_perc = (match_no_htz*100/(match_no_htz + diff_no_htz))
+
+        values = [  name_original_sample,   # original-sample
+                    snps_original,          # snps_original
+                    snps_sample,            # snps_sample
+                    snps_match+snps_differents, # total_snps
+                    snps_match,             # snps_match_original
+                    snps_differents,        # different_alleles
+                    ambiguous_nt,           # ambiguous
+                    round(snps_match*100/snps_original, 2), # snps_original_match_per
+                    round(snps_match*100/(total_snps), 2),
+                    len(htz_dif) + len(htz_match),
+                    round(snps_no_htz_match_perc, 2)] # snps_match_percentage
+
+        # add row to results
+        results.loc[len(results)] = values
 
 def compare_results(args, output_dir, name_mix, out_seq_dir):
-    
+
     logger.info(GREEN + "Sample: %s" %(name_mix)+ END_FORMATTING)
 
     out_dir = os.path.join(output_dir, name_mix)
@@ -821,88 +736,21 @@ def compare_results(args, output_dir, name_mix, out_seq_dir):
 
     # labels of results
     results = pd.DataFrame(columns=['original-sample',
-                                'snps_original', 
-                                'snps_sample', 
-                                'total_snps', 
-                                'snps_match_original', 
-                                'different_alleles', 
-                                'ambiguous',
-                                'snps_original_match_per', 
-                                'snps_match_percentage'])
+                                    'snps_original', 
+                                    'snps_sample', 
+                                    'total_snps', 
+                                    'snps_match_original', 
+                                    'different_alleles', 
+                                    'ambiguous',
+                                    'snps_original_match_per', 
+                                    'snps_match_percentage',
+                                    'HTZ',
+                                    'snps_no_htz_match_percentage'])   
     
-    c = 0
-    d = 0 # flags to calculate dif_htz
-
-    vcf_to_compare = os.listdir(args.compare)
-
-    for vcf in vcf_to_compare:
-
-        vcf_path = os.path.join(args.compare, vcf)
-
-        original_df_all = df_all
-
-        df_original, name_original = add_sequence(args, original_df_all, vcf_path, output_dir)
-
-        df_snps_differents_1, df_snps_match_1 = fill_results(results, original_df_all, df_original, name_original, 'sample_1')
-        df_snps_differents_2, df_snps_match_2 = fill_results(results, original_df_all, df_original, name_original, 'sample_2')
-
-        if name_original == name_mix.split('_')[1]:
-            df_HTZ_original_1 = htz_positions(df_original, name_original)
-            name_original_1 = name_original
-            df_dif_1 = df_snps_differents_1
-            df_match_1 = df_snps_match_1
-            c += 1
         
-        if name_original == name_mix.split('_')[0]:
-            df_HTZ_original_2 = htz_positions(df_original, name_original)
-            name_original_2 = name_original
-            df_dif_2 = df_snps_differents_2
-            df_match_2 = df_snps_match_2
-            c += 1
-        
-        if c == 2 and d == 0: # see htz
+    add_sequences(args, df_all)
 
-            d += 1
+    fill_results(args, results, df_all, 'sample_1', output_dir)
+    fill_results(args, results, df_all, 'sample_2', output_dir)
 
-            df_HTZ = pd.merge(df_HTZ_original_1,
-                            df_HTZ_original_2,
-                            on=['POS'], how='outer')
-
-            df_both = df_HTZ[['POS']][df_HTZ[name_original_1] == df_HTZ[name_original_2]]
-            df_both['HTZ'] = ['both'] * len(df_both) 
-
-            df_HTZ_original_1 = df_HTZ_original_1[['POS']][~df_HTZ_original_1.POS.isin(df_both['POS'])]
-            df_HTZ_original_1['HTZ'] = [name_original_1] * len(df_HTZ_original_1)
-
-            df_HTZ_original_2 = df_HTZ_original_2[['POS']][~df_HTZ_original_2.POS.isin(df_both['POS'])]
-            df_HTZ_original_2['HTZ'] = [name_original_2] * len(df_HTZ_original_2)
-
-            df_HTZ = pd.concat([df_both, df_HTZ_original_1, df_HTZ_original_2])
-
-            df_dif_1 = pd.merge(df_dif_1,
-                                    df_HTZ,
-                                    on='POS', how='left')
-            print(len(df_match_1))
-            df_match_1 = pd.merge(df_match_1,
-                                    df_HTZ,
-                                    on='POS', how='left')
-            print(len(df_match_1))
-            
-            df_dif_1.to_csv(os.path.join(out_dir, 'diff_%s_sample_1.csv' %(name_original_1)))
-
-            df_dif_2 = pd.merge(df_dif_2,
-                                    df_HTZ,
-                                    on='POS', how='left')
-            
-            df_match_2 = pd.merge(df_match_2,
-                                    df_HTZ,
-                                    on='POS', how='left')
-
-            df_dif_2.to_csv(os.path.join(out_dir, 'diff_%s_sample_2.csv' %(name_original_2)))
-
-    results = results.sort_values(by='snps_match_percentage', ascending=False)
-    results.to_csv(os.path.join(out_dir, 'total_compare_%s.csv' %(name_mix)))
-
-    results_sample_original_htz(out_dir, results, name_original_1, 'sample_1', df_dif_1, df_match_1)
-    results_sample_original_htz(out_dir, results, name_original_2, 'sample_2', df_dif_2, df_match_2)
-
+    results.to_csv(os.path.join(output_dir, 'compare_results.csv'))

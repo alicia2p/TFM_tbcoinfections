@@ -145,9 +145,9 @@ def main():
         # Set the output directory
         out_compare_dir = os.path.join(output_dir+'/compare')    
         utils.check_create_dir(out_compare_dir)
-
         logger.info(CYAN + BOLD + "\nVCFs for compare supplied"+END_FORMATTING)
-        # Iterate over each sample and compare its original
+        
+        # Iterate over each sample and compare with originals
         for file in sample_list:
             mixtas.compare_results(args, out_compare_dir, file, out_seq_dir)
 
