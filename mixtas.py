@@ -748,9 +748,9 @@ def compare_results(args, output_dir, name_mix, out_seq_dir):
                                     'snps_no_htz_match_percentage'])   
     
         
-    add_sequences(args, df_all, output_dir)
+    add_sequences(args, df_all, out_dir)
 
-    fill_results(args, results, df_all, 'sample_1', output_dir)
-    fill_results(args, results, df_all, 'sample_2', output_dir)
+    fill_results(args, results, df_all, 'sample_1', out_dir)
+    fill_results(args, results, df_all, 'sample_2', out_dir)
 
-    results.to_csv(os.path.join(output_dir, 'compare_results.csv'))
+    results.to_csv(os.path.join(out_dir, 'compare_results.csv'))
