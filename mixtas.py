@@ -602,7 +602,7 @@ def df_HTZ_positions(df, name):
     df[name] = ['HTZ']*len(df)
     return df
 
-def add_sequences(args, df_all):
+def add_sequences(args, df_all, output_dir):
     
     vcf_to_compare = os.listdir(args.compare)
     
@@ -610,22 +610,23 @@ def add_sequences(args, df_all):
 
         vcf_path = os.path.join(args.compare, vcf)
 
+        # name vcf
+        name_original = vcf.split('/')[-1]
+        name_original = name_original.split('.')[0]
+        name_original = name_original[:5]
+
         # read vcf original
-        df_original = pd.read_csv(vcf_path)
+        df_original = utils.parse_vcf(args, vcf_path, output_dir, 20,
+                                name_original, compare=True)
         df_original = df_original[['POS', 'REF', 'ALT', 'TOTAL_DP', 'REF_DP', 'REF_FREQ',
        'ALT_DP', 'ALT_FREQ']]
         df_original = df_original[df_original['ALT_FREQ'] >= 0.15]
-
-        # name vcf
-        name_vcf = vcf_path.split('/')[-1]
-        name_vcf = name_vcf.split('.')[0]
-        name_vcf = name_vcf[:5]
     
         d = {pos:nt for nt, pos in zip(df_original.ALT, df_original.POS)}
         
         new_seq = [nt if pos not in d.keys() else d[pos] for nt, pos in zip(df_all.MTB_anc, df_all.POS)]
 
-        df_all[name_vcf] = new_seq
+        df_all[name_original] = new_seq
 
 def fill_results(args, results, df_all, sample, output_dir):
     
@@ -651,9 +652,6 @@ def fill_results(args, results, df_all, sample, output_dir):
         # read vcf original
         df_original = utils.parse_vcf(args, vcf_path, output_dir, 20,
                                 name_original, compare=True)
-
-
-        df_original = pd.read_csv(vcf_path)
         df_original = df_original[['POS', 'REF', 'ALT', 'TOTAL_DP', 'REF_DP', 'REF_FREQ',
        'ALT_DP', 'ALT_FREQ']]
         df_original = df_original[df_original['ALT_FREQ'] >= 0.15]
@@ -690,6 +688,8 @@ def fill_results(args, results, df_all, sample, output_dir):
         
         htz_dif = df_differences[~df_differences[name_original].isna()]
         diff_no_htz  = len(df_differences[df_differences[name_original].isna()])
+
+        df_differences.to_csv(os.path.join(output_dir, 'diff_%s_%s.csv' %(name_original, sample)))
         
         # htz match
         df_match = pd.merge(df_snps_original_match_sample[['POS']],
@@ -748,7 +748,7 @@ def compare_results(args, output_dir, name_mix, out_seq_dir):
                                     'snps_no_htz_match_percentage'])   
     
         
-    add_sequences(args, df_all)
+    add_sequences(args, df_all, output_dir)
 
     fill_results(args, results, df_all, 'sample_1', output_dir)
     fill_results(args, results, df_all, 'sample_2', output_dir)
